@@ -1,0 +1,82 @@
+plugins {
+    id 'application'
+    id 'java-library'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+javafx {
+    version = "18.0.1"
+    modules = ['javafx.controls', 'javafx.fxml']
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    def junitVersion = '5.10.1'
+
+    // This provides the JUnit API.
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
+
+    // This provides the TestEngine to actually run the tests.
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
+
+    implementation 'org.mongodb:mongodb-driver-sync:4.11.0'
+
+    implementation 'org.openjfx:javafx-controls:18.0.1'
+    implementation 'org.openjfx:javafx-fxml:18.0.1'
+    
+    implementation 'org.json:json:20231013'
+    implementation 'javax:javaee-api:8.0.1'
+
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java', 'src/server/java']
+        }
+    }
+}
+
+// application {
+//     mainClass = 'App'
+// }
+
+// task runServer(type: JavaExec) {
+//     main = 'MyServer'
+//     classpath = sourceSets.main.runtimeClasspath
+// }
+task startServer {
+    doLast {
+        def server = new ProcessBuilder('java', '-cp', sourceSets.main.runtimeClasspath.asPath, 'MyServer')
+            .redirectOutput(new File('server.log'))
+            .redirectError(new File('server.log'))
+            .start()
+    }
+}
+
+application {
+    mainClass = 'App'
+}
+
+run.mustRunAfter(startServer)
+
+task runApp(dependsOn: ['startServer', 'run'])
+
+// task runApp(type: JavaExec, dependsOn: runServer) {
+//     main = 'src.main.java.App'
+//     classpath = sourceSets.main.runtimeClasspath
+// }
+
+tasks.named('test') {
+    // Use JUnit Platform for unit tests.
+    useJUnitPlatform()
+}
